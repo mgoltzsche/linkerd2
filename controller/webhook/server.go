@@ -28,7 +28,7 @@ type handlerFunc func(context.Context, *k8s.API, *admissionv1beta1.AdmissionRequ
 type Server struct {
 	*http.Server
 	api       *k8s.API
-	handler   Handler
+	handler   handlerFunc
 	certValue atomic.Value
 	recorder  record.EventRecorder
 }
@@ -38,7 +38,7 @@ func NewServer(
 	ctx context.Context,
 	api *k8s.API,
 	addr, certPath string,
-	handler Handler,
+	handler handlerFunc,
 	component string,
 ) (*Server, error) {
 	updateEvent := make(chan struct{})
@@ -78,7 +78,7 @@ func NewServer(
 func getConfiguredServer(
 	httpServer *http.Server,
 	api *k8s.API,
-	handler Handler,
+	handler handlerFunc,
 	recorder record.EventRecorder,
 ) *Server {
 	var emptyCert atomic.Value

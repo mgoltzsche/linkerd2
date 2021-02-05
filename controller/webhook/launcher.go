@@ -35,7 +35,7 @@ func Launch(ctx context.Context, APIResources []k8s.APIResource, metricsPort uin
 		log.Fatalf("failed to initialize Kubernetes API: %s", err)
 	}
 
-	s, err := NewServer(ctx, k8sAPI, addr, pkgk8s.MountPathTLSBase, handler, component)
+	s, err := NewServer(ctx, k8sAPI, *addr, pkgk8s.MountPathTLSBase, handler, component)
 	if err != nil {
 		log.Fatalf("failed to initialize the webhook server: %s", err)
 	}
