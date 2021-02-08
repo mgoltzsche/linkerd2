@@ -10,14 +10,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// ParseOpaquePorts parses the opaque ports annotation into a list of ports;
+// ParseContainerOpaquePorts parses the opaque ports annotation into a list of ports;
 // this includes converting port ranges into separate ports and named ports
 // into their port number equivalents.
-func ParseOpaquePorts(override string, containers []corev1.Container) []string {
-	var portRanges []*config.PortRange
-	split := strings.Split(strings.TrimSuffix(override, ","), ",")
-	portRanges = ToPortRanges(split)
-
+func ParseContainerOpaquePorts(override string, containers []corev1.Container) []string {
+	portRanges := getPortRanges(override)
 	var values []string
 	for _, portRange := range portRanges {
 		pr := portRange.GetPortRange()
@@ -49,10 +46,26 @@ func ParseOpaquePorts(override string, containers []corev1.Container) []string {
 	return values
 }
 
-// ToPortRanges converts a slice of strings into a slice of PortRanges.
-func ToPortRanges(portRanges []string) []*config.PortRange {
-	ports := make([]*config.PortRange, len(portRanges))
-	for i, p := range portRanges {
+func ParseOpaquePorts(override string) []string {
+	portRanges := getPortRanges(override)
+	var values []string
+	for _, portRange := range portRanges {
+		pr, err := ports.ParsePortRange(portRange.GetPortRange())
+		if err != nil {
+			log.Warnf("Invalid port range [%v]: %s", pr, err)
+			continue
+		}
+		for i := pr.LowerBound; i <= pr.UpperBound; i++ {
+			values = append(values, strconv.Itoa(i))
+		}
+	}
+	return values
+}
+
+func getPortRanges(override string) []*config.PortRange {
+	split := strings.Split(strings.TrimSuffix(override, ","), ",")
+	ports := make([]*config.PortRange, len(split))
+	for i, p := range split {
 		ports[i] = &config.PortRange{PortRange: p}
 	}
 	return ports
